@@ -116,81 +116,87 @@ export function CsvAsm(stdlib, foreign, heap) {
     return ((H[(q + 1) >> 0] | 0) == 110) | 0;
   }
   function unq() {
-    var a = 0, q = 0, c = 0, d = 0;
-    a = p;
+    var q = 0, c = 0, d = 0, o1 = 0;
     q = p;
-    added = 0;
+    o1 = o;
     while ((q | 0) < (end | 0)) {
       c = H[q >> 0] | 0;
       if ((c | 0) == 44) {
-        cp(a, q);
         p = (q + 1) | 0;
         ended = 0;
+        added = (o - o1) | 0;
         return;
       }
       if ((c | 0) == 92) {
         d = H[(q + 1) >> 0] | 0;
         if ((d | 0) == 110) {
-          cp(a, q);
           p = (q + 2) | 0;
           line = (line + 1) | 0;
           ended = 1;
+          added = (o - o1) | 0;
           return;
         }
         if ((d | 0) == 114) {
-          cp(a, q);
           if (isLf((q + 2) | 0) | 0) {
             p = (q + 4) | 0;
             line = (line + 1) | 0;
             ended = 1;
+            added = (o - o1) | 0;
             return;
           }
           err(6);
           q = (q + 2) | 0;
-          a = q;
           continue;
         }
+        if ((d | 0) == 117) ovf = 2;
+        H[o >> 0] = 92;
+        H[(o + 1) >> 0] = d;
+        o = (o + 2) | 0;
         q = (q + 2) | 0;
         continue;
       }
+      H[o >> 0] = c;
+      o = (o + 1) | 0;
       q = (q + 1) | 0;
     }
-    cp(a, end);
     p = end;
     ended = 2;
+    added = (o - o1) | 0;
   }
   function quo() {
-    var open = 0, openLine = 0, o0 = 0, q = 0, a = 0, c = 0, d = 0;
+    var open = 0, openLine = 0, o0 = 0, q = 0, c = 0, d = 0;
     open = p;
     openLine = line;
     o0 = o;
     q = (p + 2) | 0;
-    a = q;
     for (;;) {
       if ((q | 0) >= (end | 0)) {
         o = o0;
         line = openLine;
         err(7);
-        put(92);
-        put(34);
+        H[o >> 0] = 92;
+        H[(o + 1) >> 0] = 34;
+        o = (o + 2) | 0;
         p = (open + 2) | 0;
         unq();
         return;
       }
-      if ((H[q >> 0] | 0) != 92) {
+      c = H[q >> 0] | 0;
+      if ((c | 0) != 92) {
+        H[o >> 0] = c;
+        o = (o + 1) | 0;
         q = (q + 1) | 0;
         continue;
       }
       d = H[(q + 1) >> 0] | 0;
       if ((d | 0) == 34) {
-        cp(a, q);
         if ((((q + 3) | 0) | 0) < (end | 0)) {
           if ((H[(q + 2) >> 0] | 0) == 92) {
             if ((H[(q + 3) >> 0] | 0) == 34) {
-              put(92);
-              put(34);
+              H[o >> 0] = 92;
+              H[(o + 1) >> 0] = 34;
+              o = (o + 2) | 0;
               q = (q + 4) | 0;
-              a = q;
               continue;
             }
           }
@@ -199,16 +205,19 @@ export function CsvAsm(stdlib, foreign, heap) {
         break;
       }
       if ((d | 0) == 114) {
-        cp(a, q);
-        put(92);
-        put(110);
+        H[o >> 0] = 92;
+        H[(o + 1) >> 0] = 110;
+        o = (o + 2) | 0;
         line = (line + 1) | 0;
         q = (q + 2) | 0;
         if (isLf(q) | 0) q = (q + 2) | 0;
-        a = q;
         continue;
       }
       if ((d | 0) == 110) line = (line + 1) | 0;
+      if ((d | 0) == 117) ovf = 2;
+      H[o >> 0] = 92;
+      H[(o + 1) >> 0] = d;
+      o = (o + 2) | 0;
       q = (q + 2) | 0;
     }
     if ((p | 0) >= (end | 0)) {
@@ -259,6 +268,7 @@ export function CsvAsm(stdlib, foreign, heap) {
     ovf = 0;
     line = 1;
     p = s;
+    if (((((o0 + ((stop - s) << 2)) | 0) + 256) | 0) > (olim0 | 0)) return -1;
     if ((((s + 2) | 0) | 0) < (end | 0))
       if ((H[s >> 0] | 0) == 0xef)
         if ((H[(s + 1) >> 0] | 0) == 0xbb)
@@ -287,16 +297,24 @@ export function CsvAsm(stdlib, foreign, heap) {
       isHead = cols ? 0 : 1;
       recRow = isHead ? -1 : nrows;
       r00 = o;
-      if ((nrows | 0) > 0) put(44);
-      put(91);
+      if ((nrows | 0) > 0) {
+        H[o >> 0] = 44;
+        o = (o + 1) | 0;
+      }
+      H[o >> 0] = 91;
+      o = (o + 1) | 0;
       nf = 0;
       isQ = 0;
       cutAt = -1;
       len = 0;
       do {
-        if ((nf | 0) > 0) put(44);
+        if ((nf | 0) > 0) {
+          H[o >> 0] = 44;
+          o = (o + 1) | 0;
+        }
         if ((nf | 0) == (width | 0)) cutAt = o;
-        put(34);
+        H[o >> 0] = 34;
+        o = (o + 1) | 0;
         fs = o;
         isQ = 0;
         if ((((p + 1) | 0) | 0) < (end | 0))
@@ -305,7 +323,8 @@ export function CsvAsm(stdlib, foreign, heap) {
         if (isQ) quo();
         else unq();
         len = (o - fs) | 0;
-        put(34);
+        H[o >> 0] = 34;
+        o = (o + 1) | 0;
         nf = (nf + 1) | 0;
       } while ((ended | 0) == 0);
       if ((nf | 0) == 1)
@@ -334,6 +353,7 @@ export function CsvAsm(stdlib, foreign, heap) {
             o = (o + 3) | 0;
           }
         }
+        if (((((o + ((end - p) << 2)) | 0) + 256) | 0) > (olim | 0)) ovf = 1;
       } else if ((nf | 0) > (width | 0)) {
         errHead(10);
         estr(13);
@@ -347,7 +367,8 @@ export function CsvAsm(stdlib, foreign, heap) {
         eput(125);
         o = (cutAt - 1) | 0;
       }
-      put(93);
+      H[o >> 0] = 93;
+      o = (o + 1) | 0;
       nrows = (nrows + 1) | 0;
     }
     if (!cols) {
@@ -362,6 +383,7 @@ export function CsvAsm(stdlib, foreign, heap) {
       }
     }
     str(5);
+    if ((ovf | 0) == 2) return -2;
     if (ovf) return -1;
     return o | 0;
   }

@@ -177,7 +177,7 @@ function heapSize(n) {
 function attempt(L, fill, mult, run) {
   const IN = 1024;
   const OUT = (IN + L + 64) & ~7;
-  const outSize = (2 * L + (1 << 20)) * mult;
+  const outSize = (4 * L + (1 << 20)) * mult;
   const ERR = OUT + outSize;
   const errSize = (L + (1 << 16)) * mult;
   const heap = new ArrayBuffer(heapSize(ERR + errSize));
@@ -192,7 +192,6 @@ function attempt(L, fill, mult, run) {
   fill(u8, IN);
   B = Buffer.from(heap, IN, L);
   const asm = CsvAsm(globalThis, {}, heap);
-  const hasU = B.indexOf('\\u') >= 0;
   let o = OUT;
   let i = ws(0);
   if (B[i] !== 91) throw new Error('not an array');
@@ -220,16 +219,15 @@ function attempt(L, fill, mult, run) {
       });
       if (!seen || ts < 0) throw new Error('no text');
       if (!first) u8[o++] = 44;
-      if (hasU && B.indexOf('\\u', ts) >= 0 && B.indexOf('\\u', ts) < te) {
+      const o1 = asm.answer(IN + ts, IN + te, hdr ? 1 : 0, o, ERR - 2, ERR, ERR + errSize);
+      if (o1 === -1) return null;
+      if (o1 === -2) {
         const text = JSON.parse(B.toString('utf8', ts - 1, te + 1));
         const out = Buffer.from(JSON.stringify(run({ text, header: hdr })));
         if (o + out.length + 2 > ERR) return null;
         u8.set(out, o);
         o += out.length;
-      } else {
-        o = asm.answer(IN + ts, IN + te, hdr ? 1 : 0, o, ERR - 2, ERR, ERR + errSize);
-        if (o < 0) return null;
-      }
+      } else o = o1;
       i = ws(i);
       if (B[i] === 44) i = ws(i + 1);
       else if (B[i] === 93) break;
@@ -240,10 +238,11 @@ function attempt(L, fill, mult, run) {
 }
 
 function answerWith(L, fill, run) {
-  for (let mult = 1; ; mult *= 4) {
+  for (let mult = 1; mult <= 256; mult *= 4) {
     const r = attempt(L, fill, mult, run);
     if (r) return r;
   }
+  throw new Error('answers too large');
 }
 
 export function answerPath(path, run) {
@@ -256,7 +255,6 @@ export function answerPath(path, run) {
       off += n;
     }
   }, run);
-  closeSync(fd);
   return r;
 }
 
